@@ -36,13 +36,13 @@ BEGIN
 			DECLARE @rowCountUpdated as int 
 			DECLARE @CheckErrorMessage as varchar(100) = 'Patch not run , since the data seems to have been changed from what we expected'
 			--Declare variables for WSS claim
-			DECLARE @PaymentIdWSS AS int= 688838059 --Set variable with the payment_id for Employer: 4761510G Amount 826.80 Payment due date: 09-SEP-2021 WSS
+			DECLARE @PaymentIdWSS AS int= 688838059 --Set variable with the payment_id for Employer: 0000000 Amount 826.80 Payment due date: 09-SEP-2021 WSS
 			DECLARE @UpdateStatusRecordIdWSS as int = 321013 --Set variable for the row id that will update the effective_to for  Employer: 4761510G
 			DECLARE @DeleteStatusRecordIdWSS as int = 332021 --Set variable for the row id that will delete the row where approvat status was set to 'NOT' for Employer: 4761510G
 			DECLARE @ExternalClaimIdWSS as int = 73066
 
 			--Declare variables for ESS claim
-			DECLARE @PaymentIdESS as int = 688839140 --Set variable for with the payment_id for Employer: 0001736H Amount 753.07 Payment Due date: 09-SEP-2021 ESS
+			DECLARE @PaymentIdESS as int = 688839140 --Set variable for with the payment_id for Employer: 00000000 Amount 753.07 Payment Due date: 09-SEP-2021 ESS
 			DECLARE @UpdateStatusRecordIdESS as int = 322590 --Set variable for the row id that will update the effective_to for Employer: 0001736H
 			DECLARE @DeleteStatusRecordIdESS as int = 332020 --Set variable for the row id that will delete the row where approvat status was set to 'NOT' for Employer: 0001736H
 			DECLARE @ExternalClaimIdESS as int = 69297
@@ -81,7 +81,7 @@ BEGIN
 		
 		BEGIN TRY
 					-- ========================================================================
-					--Employer: 4761510G Amount 826.80 Payment due date: 09-SEP-2021 WSS
+					--Employer: 0111111 Amount 826.80 Payment due date: 09-SEP-2021 WSS
 					-- ========================================================================
 
 					-- Update Payment status back to ISSUED
@@ -152,7 +152,7 @@ BEGIN
 					PRINT 'First case Status_Recored deleted when approval status set to "NOT":  ' + cast(@rowCountUpdated  as varchar(12)) 
 
 					-- ========================================================================
-					--Employer: 0001736H Amount 753.07 Payment Due date: 09-SEP-2021 ESS
+					--Employer: 0222222Amount 753.07 Payment Due date: 09-SEP-2021 ESS
 					-- ========================================================================
 
 					-- Update Payment status back to ISSUED
