@@ -1,0 +1,88 @@
+--learning purpose SQL1
+
+-- ==========================================
+-- Payment --> SubsidyRequest
+-- ==========================================
+select top 11 
+'PAY/item-->'
+,P.payment_id,PAYI.payment_item_id,PAYI.amount,PISL.payment_source_type,PISL.payment_source_id
+,'SR-->'
+,SR.subsidy_request_id
+,'RPS-->'
+,RPS.request_period_snapshot_id
+,RPS.period_beginning,RPS.period_ending,RPS.approval_status_short_code
+,RPS.external_organisation_claim_id
+,'claim-->'
+,WSC.scheme_code 
+,WSC.claim_start_date
+,WSC.claim_end_date
+FROM Payment.Payment P 
+JOIN payment.payment_item PAYI on PAYI.payment_id = P.payment_id
+JOIN payment.payment_item_source_link PISL on PISL.payment_item_id = PAYI.payment_item_id
+-- JOIN Subsidy_Request 
+join wage_subsidy.subsidy_request SR on (                                                                                                -- select top 11 * FROM wage_subsidy.subsidy_request
+                                                                     PISL.payment_source_type = 'WSB' -- WageSubsidyRequest
+                                                                     and SR.subsidy_request_id = PISL.payment_source_id
+                                                                     )
+-- JOIN Request Period Snapshot id
+join Wage_Subsidy.Request_Period_Snapshot  RPS on RPS.request_period_snapshot_id = SR.request_period_snapshot_id            -- select TOP 11 * from Wage_Subsidy.Request_Period_Snapshot
+JOIN Wage_Subsidy.Wage_Subsidy_Claim WSC on WSC.external_organisation_claim_id = RPS.external_organisation_claim_id       -- select TOP 11 * from Wage_Subsidy.Wage_Subsidy_Claim
+WHERE 1=1
+and P.Payment_id = 688838059
+
+
+-- ==========================================
+-- Payment --> SubsidyRequest Status Records
+-- ==========================================
+SELECT TOP 11  status_record_link_id,SRL.context_object_type
+,'StatusRecord-->'
+,STR.effective_from
+,STR.effective_to
+,STR.status_record_id,STR.approval_status_short_code,statusx=WSAS.description
+-- JOIN Status Records (using subsidy_request_id)
+FROM wage_subsidy.status_record_link SRL               --select top 11 * from wage_subsidy.status_record_link
+join wage_subsidy.status_record STR on STR.status_record_id = SRL.status_record_id       --select top 11 * from wage_subsidy.status_record
+join dbbommain.Wage_Subsidy.Approval_Status  WSAS on WSAS.approval_status_short_code = STR.approval_status_short_code
+WHERE 1=1
+and SRL.context_object_type = 'WSR' -- subsidy Request -- select top 11 * from wage_subsidy.status_record_link
+and SRL.context_object_id = 94700
+ORDER by 
+STR.effective_from,STR.effective_to
+
+
+
+--learning purpose SQL2 
+drop table if exists #awarded
+select 
+        cl.pps_no
+       ,t.*
+       ,CURR_STATUS.*
+into #awarded
+from customer_claim.Claim t
+join customer_link cl on cl.customer_id = t.claimant_id
+CROSS APPLY 
+(
+       SELECT
+               AWARDED_effective_from = cv.effective_from 
+               ,AWARDED_effective_to= cv.effective_to
+               ,status=CS.description
+                     ,cv.payment_mode
+                     ,cv.claim_version_id
+                     ,cv_la_user_id=cv.la_user_id 
+                      ,cv_la_date_time=cv.la_date_time 
+        from generic_Claim.claim_version CV  (nolock)                                -- select top 11 * from generic_Claim.claim_version
+       join generic_claim.Claim_Status CS (nolock) on CS.claim_status_id = CV.status
+       where 1=1
+       and cv.claim_id = t.claim_id
+       and cv.is_deleted_ind = 0
+       --and cv.payment_mode in ('PAY','ARR','RCA','DWD')              
+        and 
+        (
+                      (
+                      -- NOTE: Checked for <= GetDate() and >= GetDate instead of <, >  Can actually have a 1-day AW-PAY claim version.
+                      cv.effective_from <= GETDATE() and (cv.effective_to is null or cv.effective_to >= GETDATE())           
+                      ) 
+        )
+) as CURR_STATUS
+where t.scheme_code = 'PUP'
+and CURR_STATUS.status = 'Awarded' and CURR_STATUS.payment_mode in ('PAY','ARR','RCA','DWD')
